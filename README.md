@@ -1,7 +1,7 @@
 # Rust Multi-Agent Yapay Zeka Sistemi
 
 Rust ile yazılmış,çevrimdışı çalışan çok-ajanlı yapay zeka sohbet sistemi.
-İki yapay zeka modeli bağımsız bir analistı ikna etmeye çalışıyor, analist her turu değerlendiriyor.
+İki yapay zeka modeli bağımsız bir analisti,gözlemciyi diyaloglar kurarak ikna etmeye çalışıyor, analist her turu değerlendiriyor.
 Tüm modeller yerel makinede Ollama üzerinden çalışır, internet gerekmiyor.
 
 ---
@@ -9,6 +9,8 @@ Tüm modeller yerel makinede Ollama üzerinden çalışır, internet gerekmiyor.
 ## Proje Hakkında
 
 Bu proje, Programlama dilleri dersi kapsamında geliştirilmiştir.
+Rust programlama dili ile iki yapay zeka modelinin birbirinden bağımsız olarak bir gözlemci model tarafından izlenen,birbirleriyle sohbet edebildiği tamamen çevrimdışı çalışan çok-ajanlı bir sistem.  
+Sistem, llama3.1:8b ve mistral:7b modellerini temsilciler olarak, qwen2.5:7b modelini ise bağımsız analist,gözlemci olarak çalıştırıyor. Her tur analistin değerlendirmesi bir sonraki tura taşınıyor ve konuşmalar JSON olarak loglanıyor.
 
 ### Sistem Nasıl Çalışır?
 
@@ -19,6 +21,9 @@ Bu proje, Programlama dilleri dersi kapsamında geliştirilmiştir.
 Belirnenen tur boyunca yapay zekalar diyolog halinde konuşurlar.Her tur sonunda AI-C'nin analizi bir sonraki turda AI-A ve AI-B'ye iletilir.
 Modeller birbirini değil, 3. yapay zekayı gözlemciyi,analisti ikna etmeye çalışır.
 Tüm konuşma `logs/` klasörüne JSON olarak kaydedilir.
+
+### İki ayrı bilgisayarda çalıştırmak için
+Kod değişikliği gerektirmeksizin config.toml üzerinden host adresi güncellenerek farklı makinelere taşınabilir. 
 
 ---
 
