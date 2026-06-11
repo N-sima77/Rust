@@ -1,87 +1,18 @@
+mod config;
+mod logger;
+mod ollama;
+
 use colored::*;
-use serde::{Deserialize, Serialize};
-use std::fs;
-
-#[derive(Deserialize)]
-struct Config {
-    scenario: Scenario,
-    agents: Agents,
-}
-
-#[derive(Deserialize)]
-struct Scenario {
-    konu: String,
-    tur_sayisi: u32,
-}
-
-#[derive(Deserialize)]
-struct Agents {
-    a_model: String,
-    a_isim: String,
-    a_rol: String,
-    b_model: String,
-    b_isim: String,
-    b_rol: String,
-    c_model: String,
-    c_rol: String,
-}
-
-#[derive(Serialize)]
-struct OllamaRequest {
-    model: String,
-    prompt: String,
-    stream: bool,
-}
-
-#[derive(Deserialize)]
-struct OllamaResponse {
-    response: String,
-}
-
-#[derive(Serialize)]
-struct TurLog {
-    tur: u32,
-    a_yanit: String,
-    b_yanit: String,
-    analiz: String,
-}
-
-#[derive(Serialize)]
-struct OturumLog {
-    konu: String,
-    tarih: String,
-    turlar: Vec<TurLog>,
-}
-
-async fn ask(client: &reqwest::Client, model: &str, prompt: &str) -> String {
-    let req = OllamaRequest {
-        model: model.to_string(),
-        prompt: prompt.to_string(),
-        stream: false,
-    };
-
-    let res = client
-        .post("http://localhost:11434/api/generate")
-        .json(&req)
-        .send()
-        .await
-        .expect("Ollama'ya bağlanılamadı");
-
-    let body: OllamaResponse = res.json().await.expect("Yanıt parse edilemedi");
-    body.response.trim().to_string()
-}
 
 #[tokio::main]
 async fn main() {
-    let config_str = fs::read_to_string("config.toml").expect("config.toml bulunamadı");
-    let config: Config = toml::from_str(&config_str).expect("config.toml okunamadı");
+    let cfg = config::config_oku();
 
     let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(120))
+        .timeout(std::time::Duration::from_secs(cfg.system.timeout_sn))
         .build()
         .unwrap();
 
-    // Tarih oluştur
     let tarih = chrono::Local::now().format("%Y-%m-%d_%H-%M").to_string();
 
     println!();
@@ -89,76 +20,97 @@ async fn main() {
     println!("{}", "║     RUST MULTI-AGENT SİSTEMİ         ║".blue());
     println!("{}", "╚══════════════════════════════════════╝".blue());
     println!();
-    println!("{} {}", "📌 Konu:".bold(), config.scenario.konu.yellow());
-    println!("{} {}", "🔄 Tur sayısı:".bold(), config.scenario.tur_sayisi);
-    println!("{} {}", "💾 Log dosyası:".bold(), format!("logs/{}.json", tarih).cyan());
+    println!("{} {}", "📌 Konu:".bold(), cfg.scenario.konu.yellow());
+    println!("{} {}", "🔄 Tur sayısı:".bold(), cfg.scenario.tur_sayisi);
+    println!("{} {}", "🌐 Host:".bold(), cfg.system.host.cyan());
+    println!("{} {} sn", "⏱ Timeout:".bold(), cfg.system.timeout_sn);
+    println!(
+        "{} {}",
+        "💾 Log:".bold(),
+        format!("logs/{}.json", tarih).cyan()
+    );
     println!();
 
     let mut gecmis = String::new();
     let mut analizler: Vec<String> = Vec::new();
-    let mut tur_loglari: Vec<TurLog> = Vec::new();
+    let mut tur_loglari: Vec<logger::TurLog> = Vec::new();
 
-    for tur in 1..=config.scenario.tur_sayisi {
-        println!("{}", format!("━━━ TUR {} ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", tur).bold());
+    for tur in 1..=cfg.scenario.tur_sayisi {
+        println!(
+            "{}",
+            format!("━━━ TUR {} ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", tur).bold()
+        );
         println!();
 
         // ── AI-A konuşuyor ───────────────────────────────────
         let a_prompt = format!(
             "{}\n\nKonu: {}\n\nŞimdiye kadarki konuşma:\n{}\n\nŞimdi sen konuş. Kısa ve güçlü argüman kur (3-4 cümle):",
-            config.agents.a_rol,
-            config.scenario.konu,
-            gecmis
+            cfg.agents.a_rol, cfg.scenario.konu, gecmis
         );
 
-        print!("{} ", format!("[{}]", config.agents.a_isim).blue().bold());
+        print!("{} ", format!("[{}]", cfg.agents.a_isim).blue().bold());
         std::io::Write::flush(&mut std::io::stdout()).unwrap();
-        let a_yanit = ask(&client, &config.agents.a_model, &a_prompt).await;
+
+        let (a_yanit, a_token, a_gecikme) =
+            ollama::ask(&client, &cfg.system.host, &cfg.agents.a_model, &a_prompt).await;
+
         println!("{}", a_yanit.blue());
+        println!(
+            "{}",
+            format!("   ↳ {} token | {} ms", a_token, a_gecikme).dimmed()
+        );
         println!();
 
-        gecmis.push_str(&format!("{}: {}\n\n", config.agents.a_isim, a_yanit));
+        gecmis.push_str(&format!("{}: {}\n\n", cfg.agents.a_isim, a_yanit));
 
         // ── AI-B konuşuyor ───────────────────────────────────
         let b_prompt = format!(
             "{}\n\nKonu: {}\n\nŞimdiye kadarki konuşma:\n{}\n\nŞimdi sen konuş. Kısa ve güçlü argüman kur (3-4 cümle):",
-            config.agents.b_rol,
-            config.scenario.konu,
-            gecmis
+            cfg.agents.b_rol, cfg.scenario.konu, gecmis
         );
 
-        print!("{} ", format!("[{}]", config.agents.b_isim).green().bold());
+        print!("{} ", format!("[{}]", cfg.agents.b_isim).green().bold());
         std::io::Write::flush(&mut std::io::stdout()).unwrap();
-        let b_yanit = ask(&client, &config.agents.b_model, &b_prompt).await;
+
+        let (b_yanit, b_token, b_gecikme) =
+            ollama::ask(&client, &cfg.system.host, &cfg.agents.b_model, &b_prompt).await;
+
         println!("{}", b_yanit.green());
+        println!(
+            "{}",
+            format!("   ↳ {} token | {} ms", b_token, b_gecikme).dimmed()
+        );
         println!();
 
-        gecmis.push_str(&format!("{}: {}\n\n", config.agents.b_isim, b_yanit));
+        gecmis.push_str(&format!("{}: {}\n\n", cfg.agents.b_isim, b_yanit));
 
         // ── AI-C analiz ediyor (arka planda) ─────────────────
         let c_prompt = format!(
             "{}\n\nTur {} konuşması:\n{}: {}\n{}: {}\n\nAnalizini yap:",
-            config.agents.c_rol,
-            tur,
-            config.agents.a_isim,
-            a_yanit,
-            config.agents.b_isim,
-            b_yanit
+            cfg.agents.c_rol, tur, cfg.agents.a_isim, a_yanit, cfg.agents.b_isim, b_yanit
         );
 
-        let c_yanit = ask(&client, &config.agents.c_model, &c_prompt).await;
+        let (c_yanit, c_token, c_gecikme) =
+            ollama::ask(&client, &cfg.system.host, &cfg.agents.c_model, &c_prompt).await;
+
         analizler.push(format!("Tur {}: {}", tur, c_yanit));
         gecmis.push_str(&format!("Gözlemci Analizi: {}\n\n", c_yanit));
 
-        // ── Log kaydı ─────────────────────────────────────────
-        tur_loglari.push(TurLog {
+        tur_loglari.push(logger::TurLog {
             tur,
             a_yanit,
+            a_token,
+            a_gecikme_ms: a_gecikme,
             b_yanit,
+            b_token,
+            b_gecikme_ms: b_gecikme,
             analiz: c_yanit,
+            c_token,
+            c_gecikme_ms: c_gecikme,
         });
     }
 
-    // ── Tüm turlar bitti, analizleri göster ──────────────────
+    // ── Analizleri göster ─────────────────────────────────────
     println!("{}", "╔══════════════════════════════════════╗".bold());
     println!("{}", "║         KONUŞMA TAMAMLANDI           ║".bold());
     println!("{}", "╚══════════════════════════════════════╝".bold());
@@ -173,17 +125,60 @@ async fn main() {
         println!();
     }
 
-    // ── JSON log dosyasına kaydet ─────────────────────────────
-    let oturum = OturumLog {
-        konu: config.scenario.konu.clone(),
+    // ── Metrik özeti ──────────────────────────────────────────
+    println!("{}", "╔══════════════════════════════════════╗".cyan());
+    println!("{}", "║         METRİK ÖZET                  ║".cyan());
+    println!("{}", "╚══════════════════════════════════════╝".cyan());
+    println!();
+
+    let a_toplam_token: u64 = tur_loglari.iter().map(|t| t.a_token).sum();
+    let b_toplam_token: u64 = tur_loglari.iter().map(|t| t.b_token).sum();
+    let a_ort_gecikme =
+        tur_loglari.iter().map(|t| t.a_gecikme_ms).sum::<u128>() / tur_loglari.len() as u128;
+    let b_ort_gecikme =
+        tur_loglari.iter().map(|t| t.b_gecikme_ms).sum::<u128>() / tur_loglari.len() as u128;
+
+    println!(
+        "{} toplam {} token | ortalama {} ms/yanıt",
+        format!("[{}]", cfg.agents.a_isim).blue().bold(),
+        a_toplam_token.to_string().cyan(),
+        a_ort_gecikme.to_string().cyan()
+    );
+    println!(
+        "{} toplam {} token | ortalama {} ms/yanıt",
+        format!("[{}]", cfg.agents.b_isim).green().bold(),
+        b_toplam_token.to_string().cyan(),
+        b_ort_gecikme.to_string().cyan()
+    );
+    println!();
+
+    // ── Genel özet ────────────────────────────────────────────
+    println!("{}", "╔══════════════════════════════════════╗".cyan());
+    println!("{}", "║         GENEL ÖZET                   ║".cyan());
+    println!("{}", "╚══════════════════════════════════════╝".cyan());
+    println!();
+
+    let ozet_prompt = format!(
+        "Sen tarafsız bir analistsin. Aşağıdaki müzakere konuşmasını analiz et:\n\n{}\n\nŞunları söyle:\n1) Genel kazanan kim ve neden?\n2) Her tarafın en güçlü ve en zayıf anı\n3) Kullanılan ikna teknikleri\n4) Final skoru: {} kaç/10, {} kaç/10",
+        gecmis, cfg.agents.a_isim, cfg.agents.b_isim
+    );
+
+    print!("{}", "Genel özet hazırlanıyor...".cyan());
+    std::io::Write::flush(&mut std::io::stdout()).unwrap();
+    let (ozet, _, _) =
+        ollama::ask(&client, &cfg.system.host, &cfg.agents.c_model, &ozet_prompt).await;
+    println!("\r{}", " ".repeat(40));
+    println!("{}", ozet.cyan());
+
+    // ── Log kaydet ────────────────────────────────────────────
+    let oturum = logger::OturumLog {
+        konu: cfg.scenario.konu.clone(),
         tarih: tarih.clone(),
+        host: cfg.system.host.clone(),
+        timeout_sn: cfg.system.timeout_sn,
+        toplam_tur: cfg.scenario.tur_sayisi,
         turlar: tur_loglari,
     };
 
-    fs::create_dir_all("logs").unwrap();
-    let log_yolu = format!("logs/{}.json", tarih);
-    let json = serde_json::to_string_pretty(&oturum).unwrap();
-    fs::write(&log_yolu, json).unwrap();
-
-    println!("{} {}", "💾 Log kaydedildi:".bold().cyan(), log_yolu.cyan());
+    logger::kaydet(&oturum, &tarih);
 }

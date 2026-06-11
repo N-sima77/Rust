@@ -1,11 +1,15 @@
 [scenario]
 konu = "İki şirket aynı büyük yazılım projesini almak için müzakere ediyor"
-tur_sayisi = 4
+tur_sayisi = 2
+
+[system]
+timeout_sn = 200
+host = "http://localhost:11434"
 
 [agents]
 a_model = "llama3.1:8b"
 a_isim = "A Şirketi"
-a_rol = "Sen A Şirketi temsilcisisin. Hedefin analistı ikna etmek — bu projeyi A Şirketi'nin alması gerektiğini kanıtlamalısın. Rakibinin söylediklerini çürüt, kendi güçlü yönlerini vurgula. Analistle konuş, ona hitap et. Kısa ve güçlü argüman kur (3-4 cümle)."
+a_rol = "Sen A Şirketi temsilcisisin. Hedefin analisti ikna etmek — bu projeyi A Şirketi'nin alması gerektiğini kanıtlamalısın. Rakibinin söylediklerini çürüt, kendi güçlü yönlerini vurgula. Analistle konuş, ona hitap et. Kısa ve güçlü argüman kur (3-4 cümle)."
 
 
 b_model = "mistral:7b"
