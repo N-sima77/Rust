@@ -16,8 +16,8 @@ Bu proje, Programlama dilleri dersi kapsamında geliştirilmiştir.
 - **AI-B** (mistral:7b) — örnek olarak 2. şirket temsilcisi, analistı ikna etmeye çalışır  
 - **AI-C** (qwen2.5:7b) — bağımsız analist, her tur değerlendirme yapar, turlar bitince final kararını açıklar
 
-Her tur sonunda AI-C'nin analizi bir sonraki turda AI-A ve AI-B'ye iletilir.
-Modeller birbirini değil, analistı ikna etmeye çalışır.
+Belirnenen tur boyunca yapay zekalar diyolog halinde konuşurlar.Her tur sonunda AI-C'nin analizi bir sonraki turda AI-A ve AI-B'ye iletilir.
+Modeller birbirini değil, 3. yapay zekayı gözlemciyi,analisti ikna etmeye çalışır.
 Tüm konuşma `logs/` klasörüne JSON olarak kaydedilir.
 
 ---
@@ -44,7 +44,6 @@ Tüm konuşma `logs/` klasörüne JSON olarak kaydedilir.
 - Windows / macOS / Linux
 - Rust (rustup ile kurulum önerilir)
 - Ollama
-- 32 GB RAM önerilir (minimum 16 GB)
 - ~14 GB disk alanı (3 model için)
 
 ### 1. Rust Kurulumu
@@ -70,8 +69,8 @@ ollama pull qwen2.5:7b
 ### 4. Projeyi Klonlayın
 
 ```bash
-git clone https://github.com/kullaniciadı/Rust.git
-cd rust-multi-agent
+git clone [https://github.com/N-sima77/Rust.git]
+cd rust_project
 ```
 
 ### 5. Derleyin
@@ -84,13 +83,13 @@ cargo build
 
 ## Kullanım
 
-### Çalıştırma
+### Çalıştırmak için
 
 ```bash
 cargo run
 ```
 
-### Senaryo Değiştirme
+### Senaryo Değiştirme için
 
 `config.toml` dosyasını düzenleyin:
 
@@ -120,6 +119,7 @@ Kodu değiştirmeden farklı senaryolar denenebilir:
 ║     RUST MULTI-AGENT SİSTEMİ         ║
 ╚══════════════════════════════════════╝
 Örnek:
+
 📌 Konu: İki şirket aynı büyük yazılım projesini almak için müzakere ediyor
 🔄 Tur sayısı: 2
 
