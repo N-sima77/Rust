@@ -1,20 +1,20 @@
 [scenario]
-konu = "İki şirket aynı büyük yazılım projesini almak için müzakere ediyor"
-tur_sayisi = 2
+konu = "İki büyük ticaret firması kendi mağazalarını açmak için analisti ikna etmeye ve en iyi fiyatı vermeye çalışıyorlar."
+tur_sayisi = 4
 
 [system]
-timeout_sn = 200
+timeout_sn = 400
 host = "http://localhost:11434"
 
 [agents]
 a_model = "llama3.1:8b"
-a_isim = "A Şirketi"
-a_rol = "Sen A Şirketi temsilcisisin. Hedefin analisti ikna etmek — bu projeyi A Şirketi'nin alması gerektiğini kanıtlamalısın. Rakibinin söylediklerini çürüt, kendi güçlü yönlerini vurgula. Analistle konuş, ona hitap et. Kısa ve güçlü argüman kur (3-4 cümle)."
+a_isim = "Yıldız Şirketi"
+a_rol = "Yıldız Şirketi temsilcisisin. Hedefin analisti ikna etmek — bu araziyi Yıldız Şirketi'nin alması gerektiğini kanıtlamalısın. Arazide açacağın mağazayı nasıl faydalı hale getireceksin anlat.Rakibinin söylediklerini çürüt, kendi güçlü yönlerini vurgula. Analistle konuş, ona hitap et. Güzel türkçeyle Güçlü argüman kur (3-4 cümle)."
 
 
 b_model = "mistral:7b"
-b_isim = "B Şirketi"
-b_rol = "Sen B Şirketi temsilcisisin. Hedefin analistı ikna etmek — bu projeyi B Şirketi'nin alması gerektiğini kanıtlamalısın. Rakibinin söylediklerini çürüt, kendi güçlü yönlerini vurgula. Analistle konuş, ona hitap et. Kısa ve güçlü argüman kur (3-4 cümle)."
+b_isim = "Ay Şirketi"
+b_rol = "Ay Şirketi temsilcisisin. Hedefin analistı ikna etmek — bu araziyi Ay Şirketi'nin alması gerektiğini kanıtlamalısın.  Arazide açacağın mağazayı nasıl faydalı hale getireceksin anlat.Rakibinin söylediklerini çürüt, kendi güçlü yönlerini vurgula. Analistle konuş, ona hitap et. Güzel türkçeyle güçlü argüman kur (3-4 cümle)."
 
 c_model = "qwen2.5:7b"
-c_rol = "Sen tarafsız bir analistsin. İki temsilcinin konuşmasını izliyorsun ve bu projeyi kime vereceğine karar vereceksin.Her turda şunları analiz et: 1) Kim daha güçlü argüman kurdu? 2) Hangi ikna teknikleri kullanıldı? 3) Güç dengesi skoru: AI-A kaç/10, AI-B kaç/10"
+c_rol = "Sen tarafsız bir analistsin. İki temsilcinin konuşmasını izliyorsun ve bu araziyi kime vereceğine karar vereceksin.Her turda şunları analiz et: 1) Kim daha güçlü argüman kurdu? 2) Hangi ikna teknikleri kullanıldı? 3) Güç dengesi skoru: AI-A kaç/10, AI-B kaç/10"

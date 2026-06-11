@@ -31,7 +31,8 @@ async fn main() {
     );
     println!();
 
-    let mut gecmis = String::new();
+    let mut gecmis_vec: std::collections::VecDeque<String> = std::collections::VecDeque::new();
+    let max_gecmis = 10;
     let mut analizler: Vec<String> = Vec::new();
     let mut tur_loglari: Vec<logger::TurLog> = Vec::new();
 
@@ -45,7 +46,7 @@ async fn main() {
         // ── AI-A konuşuyor ───────────────────────────────────
         let a_prompt = format!(
             "{}\n\nKonu: {}\n\nŞimdiye kadarki konuşma:\n{}\n\nŞimdi sen konuş. Kısa ve güçlü argüman kur (3-4 cümle):",
-            cfg.agents.a_rol, cfg.scenario.konu, gecmis
+            cfg.agents.a_rol, cfg.scenario.konu, gecmis_vec.iter().cloned().collect::<String>()
         );
 
         print!("{} ", format!("[{}]", cfg.agents.a_isim).blue().bold());
@@ -61,12 +62,15 @@ async fn main() {
         );
         println!();
 
-        gecmis.push_str(&format!("{}: {}\n\n", cfg.agents.a_isim, a_yanit));
+        if gecmis_vec.len() >= max_gecmis {
+         gecmis_vec.pop_front();
+        }
+         gecmis_vec.push_back(format!("{}: {}\n\n", cfg.agents.a_isim, a_yanit));
 
         // ── AI-B konuşuyor ───────────────────────────────────
         let b_prompt = format!(
             "{}\n\nKonu: {}\n\nŞimdiye kadarki konuşma:\n{}\n\nŞimdi sen konuş. Kısa ve güçlü argüman kur (3-4 cümle):",
-            cfg.agents.b_rol, cfg.scenario.konu, gecmis
+            cfg.agents.b_rol, cfg.scenario.konu, gecmis_vec.iter().cloned().collect::<String>()
         );
 
         print!("{} ", format!("[{}]", cfg.agents.b_isim).green().bold());
@@ -82,7 +86,10 @@ async fn main() {
         );
         println!();
 
-        gecmis.push_str(&format!("{}: {}\n\n", cfg.agents.b_isim, b_yanit));
+        if gecmis_vec.len() >= max_gecmis {
+          gecmis_vec.pop_front();
+            }
+          gecmis_vec.push_back(format!("{}: {}\n\n", cfg.agents.b_isim, b_yanit));
 
         // ── AI-C analiz ediyor (arka planda) ─────────────────
         let c_prompt = format!(
@@ -94,7 +101,10 @@ async fn main() {
             ollama::ask(&client, &cfg.system.host, &cfg.agents.c_model, &c_prompt).await;
 
         analizler.push(format!("Tur {}: {}", tur, c_yanit));
-        gecmis.push_str(&format!("Gözlemci Analizi: {}\n\n", c_yanit));
+        if gecmis_vec.len() >= max_gecmis {
+         gecmis_vec.pop_front();
+}
+         gecmis_vec.push_back(format!("Gözlemci Analizi: {}\n\n", c_yanit));
 
         tur_loglari.push(logger::TurLog {
             tur,
@@ -160,7 +170,7 @@ async fn main() {
 
     let ozet_prompt = format!(
         "Sen tarafsız bir analistsin. Aşağıdaki müzakere konuşmasını analiz et:\n\n{}\n\nŞunları söyle:\n1) Genel kazanan kim ve neden?\n2) Her tarafın en güçlü ve en zayıf anı\n3) Kullanılan ikna teknikleri\n4) Final skoru: {} kaç/10, {} kaç/10",
-        gecmis, cfg.agents.a_isim, cfg.agents.b_isim
+        gecmis_vec.iter().cloned().collect::<String>(), cfg.agents.a_isim, cfg.agents.b_isim
     );
 
     print!("{}", "Genel özet hazırlanıyor...".cyan());
