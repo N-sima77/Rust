@@ -1,8 +1,8 @@
 # Rust Multi-Agent Yapay Zeka Sistemi
 
-Rust ile yazılmış,çevrimdışı çalışan çok-ajanlı yapay zeka sistemi.
-İki yapay zeka modeli bağımsız bir analist tarafındna analiz ediliyor.
-Tüm modeller yerel makinede Ollama üzerinden çalışır, internet gerekmez.
+Rust ile yazılmış,çevrimdışı çalışan çok-ajanlı yapay zeka sohbet sistemi.
+İki yapay zeka modeli bağımsız bir analistı ikna etmeye çalışıyor, analist her turu değerlendiriyor.
+Tüm modeller yerel makinede Ollama üzerinden çalışır, internet gerekmiyor.
 
 ---
 
@@ -115,3 +115,18 @@ Kodu değiştirmeden farklı senaryolar denenebilir:
 - İki startup — yatırımcı ikna
 
 ### Terminal Çıktısı
+
+╔══════════════════════════════════════╗
+║     RUST MULTI-AGENT SİSTEMİ         ║
+╚══════════════════════════════════════╝
+Örnek:
+📌 Konu: İki şirket aynı büyük yazılım projesini almak için müzakere ediyor
+🔄 Tur sayısı: 2
+
+━━━ TUR 1 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[A Şirketi] Projemizin başarı oranı sektör ortalamasının iki katı...
+   ↳ 287 token | 4823 ms
+
+[B Şirketi] A Şirketi'nin iddialarının aksine...
+   ↳ 312 token | 5102 ms
